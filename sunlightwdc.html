@@ -240,7 +240,6 @@ $(document).ready(function() {
 		var userInputYear = $("#inputyear").val().trim();
 		var userInputCmte = $("#committee").val();
 		var userInputQrtr = $("#quarter:checked").val();
-		console.log(userInputQrtr);
 		var connectionData = { "userInputY": userInputYear, "userInputQ": userInputQrtr, "userInputC": userInputCmte}
 		tableau.connectionName = "FEC Filings for Year" + userInputYear + ", Quarter" + userInputQrtr + ", Committee Type" + userInputCmte;
 		tableau.connectionData = JSON.stringify(connectionData);
