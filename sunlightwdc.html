@@ -1,0 +1,258 @@
+<html>
+<head>
+<title>Sunlight Foundation Connector</title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://public.tableau.com/javascripts/api/tableauwdc-1.1.0.js" type="text/javascript"></script>
+<!-- css adapted from http://www.sanwebe.com/2014/08/css-html-forms-designs -->
+<style type="text/css">
+.form-style-5{
+    max-width: 500px;
+    padding: 10px 20px;
+    background: #f4f7f8;
+    margin: 10px auto;
+    padding: 20px;
+    background: #f4f7f8;
+    border-radius: 8px;
+    font-family: Georgia, "Times New Roman", Times, serif;
+}
+.form-style-5 fieldset{
+    border: none;
+}
+.form-style-5 legend {
+    font-size: 1.4em;
+    margin-bottom: 10px;
+}
+.form-style-5 label {
+    display: block;
+    margin-bottom: 8px;
+}
+.form-style-5 input[type="text"],
+.form-style-5 input[type="date"],
+.form-style-5 input[type="datetime"],
+.form-style-5 input[type="email"],
+.form-style-5 input[type="number"],
+.form-style-5 input[type="search"],
+.form-style-5 input[type="time"],
+.form-style-5 input[type="url"],
+.form-style-5 textarea,
+.form-style-5 select {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    background: rgba(255,255,255,.1);
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    margin: 0;
+    outline: 0;
+    padding: 7px;
+    width: 100%;
+    box-sizing: border-box; 
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box; 
+    background-color: #e8eeef;
+    color:#8a97a0;
+    -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
+    margin-bottom: 10px;
+}
+
+.form-style-5 p,
+h1, h2 {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    background: rgba(255,255,255,.1);
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    margin: 0;
+    outline: 0;
+    padding: 7px;
+    width: 100%;
+    color:#8a97a0;
+    margin-bottom: 10px;
+}
+
+.form-style-5 input[type="radio"] {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    background: rgba(255,255,255,.1);
+    border: none;
+    font-size: 12px;
+    margin: 0;
+    outline: 0;
+    width: 50px;
+    color:#8a97a0;
+    margin-bottom: 10px;
+}
+
+.form-style-5 input[type="text"]:focus,
+.form-style-5 input[type="date"]:focus,
+.form-style-5 input[type="datetime"]:focus,
+.form-style-5 input[type="email"]:focus,
+.form-style-5 input[type="number"]:focus,
+.form-style-5 input[type="search"]:focus,
+.form-style-5 input[type="time"]:focus,
+.form-style-5 input[type="url"]:focus,
+.form-style-5 textarea:focus,
+.form-style-5 select:focus{
+    background: #d2d9dd;
+}
+.form-style-5 select{
+    -webkit-appearance: menulist-button;
+    height:35px;
+}
+.form-style-5 .number {
+    background: #1abc9c;
+    color: #fff;
+    height: 30px;
+    width: 30px;
+    display: inline-block;
+    font-size: 0.8em;
+    margin-right: 4px;
+    line-height: 30px;
+    text-align: center;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+    border-radius: 15px 15px 15px 0px;
+}
+
+.form-style-5 input[type="submit"],
+.form-style-5 input[type="button"]
+{
+    position: relative;
+    display: block;
+    padding: 19px 39px 18px 39px;
+    color: #FFF;
+    margin: 0 auto;
+    background: #1abc9c;
+    font-size: 18px;
+    text-align: center;
+    font-style: normal;
+    width: 100%;
+    border: 1px solid #16a085;
+    border-width: 1px 1px 3px;
+    margin-bottom: 10px;
+}
+.form-style-5 input[type="submit"]:hover,
+.form-style-5 input[type="button"]:hover
+{
+    background: #109177;
+}
+
+</style>
+</head>
+<body>
+
+<div class = "form-style-5" style="width: 350px">
+	<h1>Real-Time Federal Campaign Finance<br>
+	<a href="http://realtime.influenceexplorer.com/newest-filings/">Sunlight Foundation</a> API</h1>
+	<p>Enter Year</p>
+	<form>
+		<input type="text" id="inputyear">
+	</form>
+	<p>Select Quarter</p>
+	<form action=""><p>
+		<input type="radio" id="quarter" value="Q1" >Q1</input>
+		<input type="radio" id="quarter" value="Q2" >Q2</input>
+		<input type="radio" id="quarter" value="Q3" >Q3</input>
+		<input type="radio" id="quarter" value="Q4" >Q4</input>
+	</p></form>
+	<p>Select Committee Type</p>
+	<select id="committee">
+		<option value="H">House</option>
+		<option value="S">Senate</option>
+		<option value="P">President</option>
+		<option value="Q">Qualified PAC</option>
+		<option value="N">Non-Qualified PAC</option>
+	</select>
+	<p><input type="button" id="submitButton" value="Get the Data"/></p>
+</div>
+
+<script type="text/javascript">
+(function() {
+
+	function buildUrl(year,cmte,qrtr) {
+		var apiKey = '3124523abe9d45919dbf61153da04486'
+		var url = 'http://realtime.influenceexplorer.com/api/new_filing/?format=json&page=1&committee_class=' + cmte + '&period_type=' + qrtr + '&year_covered=' + year + '&report_type=monthly&apikey=' + apiKey;
+		return url;
+	}
+	
+	var myConnector = tableau.makeConnector();
+	
+	myConnector.getColumnHeaders = function() {
+		var fieldNames = ["fec_id","committee_name","filing_number","form_type","filed_date","coverage_from_date","coverage_to_date","is_superpac","committee_designation","committee_type","coh_end","new_loans","tot_raised","tot_spent","lines_present","form_name","skeda_url","spending_url","absolute_url","committee_url","process_time_formatted","is_superceded","cycle"];
+		var fieldTypes = ["string","string","integer","string","date","date","date","boolean","string","string","float","float","float","float","string","string","string","string","string","string","string","boolean","integer"];
+		tableau.headersCallback(fieldNames, fieldTypes);
+	};
+	
+	myConnector.getTableData = function(lastRecordToken) {
+		var dataToReturn = [];
+		var lastRecordToken = lastRecordToken ? lastRecordToken : 0;
+		var hasMoreData = false;
+		var connectionData = JSON.parse(tableau.connectionData);
+		var myUrl = buildUrl(connectionData.userInputY,connectionData.userInputC,connectionData.userInputQ);
+		var xhr = $.ajax({
+			url: myUrl,
+			dataType: 'json',
+			success: function(response){
+				var records = response.results || [];
+				var i;
+				
+				hasMoreData = response.next ? true : false;
+				lastRecordToken = parseInt(lastRecordToken, 10) + records.length;
+				
+				for (i = 0; i < records.length; i++){
+					var entry = {
+						"fec_id": records[i].fec_id,
+						"committee_name": records[i].committee_name,
+						"filing_number": records[i].filing_number,
+						"form_type": records[i].form_type,
+						"filed_date": records[i].filed_date,
+						"coverage_from_date": records[i].coverage_from_date,
+						"coverage_to_date": records[i].coverage_to_date,
+						"is_superpac": records[i].is_superpac,
+						"committee_designation": records[i].committee_designation,
+						"committee_type": records[i].committee_type,
+						"coh_end": records[i].coh_end,
+						"new_loans": records[i].new_loans,
+						"tot_raised": records[i].tot_raised,
+						"tot_spent": records[i].tot_spent,
+						"lines_present": records[i].lines_present,
+						"form_name": records[i].form_name,
+						"skeda_url": records[i].skeda_url,
+						"spending_url": records[i].spending_url,
+						"absolute_url": records[i].absolute_url,
+						"committee_url": records[i].committee_url,
+						"process_time_formatted": records[i].process_time_formatted,
+						"is_superceded": records[i].is_superceded,
+						"cycle": records[i].cycle
+					}
+					dataToReturn.push(entry);
+				}
+				tableau.dataCallback(dataToReturn, lastRecordToken, hasMoreData);
+			}
+		});
+		
+				
+	};
+
+	tableau.registerConnector(myConnector);
+})();
+
+$(document).ready(function() {
+	$("#submitButton").click(function(){
+		var userInputYear = $("#inputyear").val().trim();
+		var userInputCmte = $("#committee").val();
+		var userInputQrtr = $("#quarter:checked").val();
+		console.log(userInputQrtr);
+		var connectionData = { "userInputY": userInputYear, "userInputQ": userInputQrtr, "userInputC": userInputCmte}
+		tableau.connectionName = "FEC Filings for Year" + userInputYear + ", Quarter" + userInputQrtr + ", Committee Type" + userInputCmte;
+		tableau.connectionData = JSON.stringify(connectionData);
+		tableau.submit();
+	})
+});
+
+$('input[type=radio]').on('change', function() {
+	$('input[type=radio]').not(this).prop('checked',false);
+});
+
+</script>
+
+</body>
+</html>
