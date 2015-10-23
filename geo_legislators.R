@@ -3,12 +3,13 @@ library(jsonlite)
 library(tidyr)
 
 schools <- read.csv("/Users/ANB/Desktop/R/dataSets/LCGMS_SchoolData.csv")
+#schools <- read.csv("J:/LCGMS_SchoolData.csv")
 schools <- schools[,c("ATS.System.Code","Primary.Address","City","State.Code","Zip","Location.Name")]
 schools$address <- paste(schools$Primary.Address,schools$City,schools$State.Code,schools$Zip,sep=", ")
 geos <- geocode(schools$address)
 schools <- cbind(schools,geos)
 
-key <- "&apikey=3124523abe9d45919dbf61153da04486"
+key <- "&apikey=###"
 legs <- data.frame()
 schools <- schools[which(schools$Primary.Address!="NOT AVAILABLE"),]
 for (i in 1:nrow(schools)){
