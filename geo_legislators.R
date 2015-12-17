@@ -2,7 +2,8 @@ library(ggmap)
 library(jsonlite)
 library(tidyr)
 
-schools <- read.csv("J:/LCGMS_SchoolData.csv")
+schools <- read.csv("/Users/ANB/Desktop/R/dataSets/LCGMS_SchoolData.csv")
+#schools <- read.csv("J:/LCGMS_SchoolData.csv")
 schools <- schools[,c("ATS.System.Code","Primary.Address","City","State.Code","Zip","Location.Name")]
 schools$address <- paste(schools$Primary.Address,schools$City,schools$State.Code,schools$Zip,sep=", ")
 geos <- geocode(schools$address)
@@ -24,3 +25,4 @@ legs_wide <- legs[,c("dbn","chamber","succinct")]
 legs_wide <- spread(legs_wide, "chamber","succinct")    
 
 schools <- merge(schools, legs_wide, by.x="ATS.System.Code",by.y="dbn", all.x=TRUE)
+write.csv(schools,"/Users/ANB/Desktop/R/dataSets/LCGMS_w_reps.csv",row.names=FALSE)
