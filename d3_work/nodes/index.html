@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<!--adapted from http://bl.ocks.org/mbostock/1153292 -->
+<meta charset="utf-8">
+<style>
+
+.link {
+  fill: none;
+  stroke-width: 2px;
+}
+
+circle {
+  fill: #ccc;
+  stroke: #333;
+  stroke-width: 1.5px; 
+}
+
+text {
+  font: 11px sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+text:hover {
+  font-weight: bold;
+}
+
+</style>
+<body>
+<p><strong>NVPS Overnight Data Processing.</strong> Nodes represent tables and paths represent scripts.</p>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/1.7.0/d3-legend.min.js"></script>
+<script>
+
+var width = 1350,
+height = 700,
+radius = 6;
+
+var force = d3.layout.force()		
+	.size([width, height])
+	
+var color = d3.scale.category20();
+
+var xscale = d3.scale.linear()
+	.range([50, width - 20]);
+	
+var yscale = d3.scale.linear()
+	.range([50, height - 20]);
+
+d3.json("data.json", function(error, data) {
+
+	var nodes = {};
+	
+	var scripts = [];
+	
+	var nodeList = [];
+	
+	// Compute the distinct nodes from the links.
+	data.forEach(function(link) {
+	  if (scripts.indexOf(link.script) == -1) {
+		scripts.push(link.script);
+	  }
+	  link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
+	  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
+	});
+	
+	for (var key in nodes){
+	  nodes[key].countS = 0;
+	  nodes[key].countT = 0;
+	  data.forEach(function(link) {
+		if (link.source.name == nodes[key].name){
+		  nodes[key].countS++;
+		}
+		if (link.target.name == nodes[key].name){
+		  nodes[key].countT++;
+		}
+	  })
+	  nodes[key].level = findLevel(nodes[key],1);
+	  nodeList.push(nodes[key].name);
+	};
+
+	nodeList.sort();
+	scripts.sort();
+	//yscale.domain(nodeList);
+	
+	xscale.domain([
+		d3.min(data, function(d){
+			return Math.min(d.source.level,d.target.level);
+		}), 
+		d3.max(data, function(d){
+			return Math.max(d.source.level,d.target.level);
+		}), 
+	]);
+	
+	yscale.domain([
+		d3.min(data, function(d){
+			return Math.min(d.source.level,d.target.level);
+		}), 
+		d3.max(data, function(d){
+			return Math.max(d.source.level,d.target.level);
+		}), 
+	]);
+	
+	force
+		.nodes(d3.values(nodes))
+		.links(data)
+		.charge(-1000)
+		.linkStrength(1)
+		.friction(.8)
+		.on("tick", tick)
+		.start();
+	
+	var drag = force.drag()
+		.on("dragstart",dragstart);
+
+	var svg = d3.select("body").append("svg")
+		.attr("width", '100%')
+		.attr("height", height);
+
+	// Per-type markers, as they don't inherit styles.
+	svg.append("defs").selectAll("marker")
+		.data(scripts)
+	  .enter().append("marker")
+		.attr("id", function(d) { return d; })
+		.attr("viewBox", "0 -5 10 10")
+		.attr("refX", 12)
+		.attr("refY", 0)
+		.attr("markerWidth", 6)
+		.attr("markerHeight", 6)
+		.attr("orient", "auto")
+		.style("fill", function(d) {
+			return color(d);
+		})
+		.style("stroke", "#ffffff")
+	  .append("path")
+		.attr("d", "M0,-5L10,0L0,5");
+		
+	svg.append("g")
+		.attr("class","legendColor")
+		.attr("transform","translate("+ (width + 20) +",0)")
+	
+	var legend = d3.legend.color()
+		.scale(color);
+	
+	svg.select(".legendColor")
+		.call(legend);
+
+	var path = svg.append("g").selectAll("path")
+		.data(force.links())
+	  .enter().append("path")
+		.attr("class", function(d) { return "link " + d.script; })
+		.attr("marker-end", function(d) { return "url(#" + d.script + ")"; })
+		.style("stroke", function(d){
+			return color(d.script);
+		});
+	
+	path.append("title")
+		.text(function(d){
+			return d.script;
+		})
+		
+	var cscale = d3.scale.linear()
+		.domain([
+			d3.min(data, function(d){
+				return d.source.countS + d.source.countT;
+			}), 
+			d3.max(data, function(d){
+				return d.source.countS + d.source.countT;
+			}), 
+		])
+		.range(["white","black"]);
+
+	var circle = svg.append("g").selectAll("circle")
+		.data(force.nodes())
+	  .enter().append("circle")
+		.attr("r", radius)
+		.style("fill", function(d){
+			return cscale((d.countS + d.countT));
+		})
+		.style("stroke-dasharray", function(d){
+			console.log(d.name.substring(1,14));
+			if(d.name.substring(0,14)=="prod_reference"){
+				return ("1,1")
+			} else {
+				return ("0,0");
+			}
+		})
+		.on("dblclick", dblclick)
+		.call(drag);;
+
+	circle.append("title")
+		.text(function(d){
+			return d.name+" pulls from "+d.countT+" and is pulled by "+d.countS;
+		})	
+		
+	var text = svg.append("g").selectAll("text")
+		.data(force.nodes())
+	  .enter().append("text")
+		.attr("x", 12)
+		.attr("y", ".31em")
+		.text(function(d) { return d.name; });
+		
+
+	// Use elliptical arc path segments to doubly-encode directionality.
+	function tick() {
+	  path.attr("d", linkArc);	  
+	  circle.attr("transform", transform);
+	  text.attr("transform", transform);
+	}
+	
+	function linkArc(d) {
+	  return "M" + xscale(d.source.level) + "," + Math.max(radius, Math.min(d.source.y, height - radius)) + "L" + xscale(d.target.level) + "," + Math.max(radius, Math.min(d.target.y, height - radius));
+	  //return "M" + Math.max(radius, Math.min(d.source.x, width - radius)) + "," + yscale(d.source.level) + "L" + Math.max(radius, Math.min(d.target.x, width - radius)) + "," + yscale(d.target.level);
+	}
+
+	function transform(d) {
+	  return "translate(" + xscale(d.level) + "," + Math.max(radius, Math.min(d.y, height - radius)) + ")";
+	  //return "translate(" + Math.max(radius, Math.min(d.x, width - radius)) + "," + yscale(d.level) + ")rotate(-25)";
+	}
+	
+	function findLevel(node, startLevel) {
+	  var level = startLevel;
+	  var sources = [];
+	  var levels = [];
+	  data.forEach(function(link) {
+	    if (link.target.name == node.name) {
+	      sources.push(link.source.name);
+	    }
+	  });
+	  if (sources.length > 0) {
+	    for (var i = 0; i < sources.length; i++) {
+	      levels.push(findLevel(nodes[sources[i]], level));
+	    }
+		level = level + Math.max.apply(Math,levels);
+		return level;
+	  } else {
+	    return level;
+	  }
+	};
+	
+	function dblclick(d) {
+		d3.select(this)
+			.classed("fixed", d.fixed = false)
+			.style("fill", function(d){
+				return cscale((d.countS + d.countT));
+			});
+	}
+	
+	function dragstart(d) {
+		d3.select(this)
+			.style("fill","#ff0000")
+			.classed("fixed", d.fixed = true);
+	}
+
+});
+</script>
