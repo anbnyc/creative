@@ -27,7 +27,7 @@
 			}
 
 			circle:hover {
-				fill: orange;
+				r: 7;
 			}
 			
 			text {
@@ -45,6 +45,12 @@
 				font-family: sans-serif;
 				font-size: 11px;
 			}
+			
+			.legend rect {
+	 			fill:white;
+				stroke:black;
+  				opacity:0.8;
+  			}
 
 		</style>
 	</head>
@@ -53,28 +59,29 @@
 		<h1>Manhattan's Tree Census</h1>
 
 		<p>Tree Population and Size by Zip Code and Species. Source: <a href="https://data.cityofnewyork.us/Environment/Street-Tree-Census-Manhattan-/e6n3-m3vc">NYC Open Data</a>, 2015</p>
-
-		<div>
-			<label><input type="radio" name="xtoggle" value="zip" checked>Zip Code</label>
-			<label><input type="radio" name="xtoggle" value="species">Species</label>
-		</div>
 		
 		<script type="text/javascript">		
 
 
-			var w = 800;
+			var w = 1000;
 			var h = 600;
-			var padding = [ 30, 20, 30, 40 ];  //Top, right, bottom, left
+			var padding = [ 30, 20, 35, 45 ];  //Top, right, bottom, left
+			var legendRectSize = 8;
+			var legendSpacing = 4;
+					
 
 			var yScale = d3.scale.linear()
 								.range([h - padding[2], padding[0]]);
 			
-			var xScale = d3.scale.linear()
+			var xScale = d3.scale.log()
 								.range([padding[3], w - padding[1] ]);
 
 			var xAxis = d3.svg.axis()
 							.scale(xScale)
-							.orient("bottom");
+							.orient("bottom")
+							.tickFormat(function(d) {
+								return formatValue(d);
+							});
 							
 			var yAxis = d3.svg.axis()
 							.scale(yScale)
@@ -86,39 +93,58 @@
 						.attr("height", h);
 
 			var color = d3.scale.category20();
+			
+			var formatValue = d3.format(".1s")
 
+			var once = false;
 
 			d3.csv("zipspecies.csv", function(data) {
 
-				data.sort(function(a, b) {
-					return d3.descending(+a.num,+b.num);
-				});
-				
 				xScale.domain([ d3.min(data, function(d) {
-						return d.num;
-					}),
+						return +d.num;
+					}) - 1,
 					d3.max(data, function(d) {
-						return d.num;
+						return +d.num;
 					})
 				]);
 
 				yScale.domain([ d3.min(data, function(d) {
-						return d.avg_diam;
-					}),
+						return +d.avg_diam;
+					}) - 1,
 					d3.max(data, function(d) {
-						return d.avg_diam;
+						return +d.avg_diam;
 					})
 				]);
 			
 				color.domain(data.map( function(d) {
-					return d.ZIPCODE;
+					return d.Presentation_Name;
 				}));
-				console.log(color.range());
-				
+							
+				var theseZips;
+					
 				var circles = svg.selectAll("circle")
 								.data(data)
 								.enter()
-								.append("circle");
+								.append("circle")
+								.on("click", function(d,i){
+									if(once == false){
+										once = true;
+										var thisZip = d.ZIPCODE;
+										theseZips = d3.selectAll("circle")
+											.data(data)
+											.filter(function(data) {
+												return data.ZIPCODE != thisZip;
+											});
+										theseZips.attr("fill","#D1D1D1")
+											.transition().duration(250).attr("r",1);
+									} else {
+										once = false;
+										theseZips.attr("fill", function(d){
+											return color(d.Presentation_Name);
+										})
+											.transition().duration(250).attr("r",3);		
+									}
+								});
 
 				//console.log(d3.select('input[name="xtoggle"]:checked').node().value);
 
@@ -131,34 +157,73 @@
 					.attr("r", .5)
 					.attr("height", 8)
 					.attr("fill", function(d){
-						return d.ZIPCODE;
+						return color(d.Presentation_Name);
 					})
 					.append("title")
 					.text(function(d) {
-						return d.ZIPCODE;
+						return d.Presentation_Name + " in " + d.ZIPCODE + ": " + d.num + " Trees, Avg " + d3.round(d.avg_diam,2) + " feet";
 					});
 				
 				circles.transition()
 					.duration(1000)
 					.attr("r", 3);
-				
+									
 				svg.append("g")
 					.attr("class", "x axis")
 					.attr("transform", "translate(0," + (h - padding[2]) + ")")
 					.call(xAxis);
 
+				svg.append("text")
+					.attr("x",w/2)
+					.attr("y",h - 2 )
+					.style("text-anchor","middle")
+					.style("font-size","13px")
+					.text("Number of Trees (log scale)")
+
 				svg.append("g")
 					.attr("class", "y axis")
 					.attr("transform", "translate(" + padding[3] + ",0)")
 					.call(yAxis);
+					
+				svg.append("text")
+					.attr("transform","rotate(-90)")
+					.attr("x",-(h/2))
+					.attr("y",0)
+					.attr("dy", "1em")
+					.style("text-anchor","middle")
+					.style("font-size","13px")
+					.text("Average Diameter")
+
 
 			});
 
-			function switchColor() {
-				
-			}
-			
 		</script>
 
 	</body>
+	<!--
+		var legend = svg.selectAll(".legend")
+					.data(color.domain())
+					.enter()
+					.append("g")
+					.attr("class","legend")
+					.attr("transform", function(d,i) {
+						var height = legendRectSize + legendSpacing;
+						var offset = height * color.domain().length / 2;
+						var horiz = -2 * legendRectSize;
+						var vert = i * height - offset;
+						return "translate(" + (w -100 + horiz) + "," + (vert+150) + ")"
+					});
+					
+				legend.append("rect")
+					.attr("width", legendRectSize)
+					.attr("height", legendRectSize)
+					.style("fill", color)
+					.style("stroke", color);
+					
+				legend.append("text")
+					.attr("x", legendRectSize + legendSpacing)
+					.attr("y", legendRectSize - legendSpacing)
+					.style("font-size","8px")
+					.text(function(d) { return d; });
+	-->
 </html>
