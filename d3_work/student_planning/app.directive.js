@@ -29,9 +29,16 @@ angular.module('plan-app')
           .on("dragstart", dragstart)
           .on("dragend",dragend);
 
-      var svg = d3.select(".vizContainer").append("svg")
+      var svg = d3.select(".vizContainer")
+          .append("svg")
           .attr("width", width)
           .attr("height", height);
+          
+      var startbox = svg.append("rect")
+          .attr("class","startbox")
+          .attr("width", width/2)
+          .attr("height", height);
+          
       force
           .nodes(scope.data)
           .links([])
@@ -60,6 +67,7 @@ angular.module('plan-app')
       
       function dragend(d){
         d.newX = +d3.select(this).attr("cx");
+        scope.$apply();
       }
 
     }

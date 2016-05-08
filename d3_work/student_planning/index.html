@@ -15,12 +15,17 @@
 width: 100%;
 height: 100%;
 font-size: 11px;
-fill: rgba(0,0,0,.6);
+}
+.node{
+fill: rgba(0,0,0,1);
+}
+rect{
+color: green;
+opacity: .2;
 }
 </style>
 </head>
 <body ng-controller="PlanAppController as ctrl">
-    <pre>{{data | json}}</pre>
     <div class="vizContainer">
         <plan-directive
             data="data"
