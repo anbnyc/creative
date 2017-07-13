@@ -1,0 +1,21 @@
+{
+  "name": "subway_logo",
+  "main": "index.js",
+  "homepage": "https://github.com/anbnyc/creative",
+  "authors": [
+    "Alec Barrett <alecbarrett@gmail.com>"
+  ],
+  "description": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "opentype.js": "^0.7.2",
+    "d3": "^4.9.1"
+  }
+}
