@@ -6,22 +6,32 @@
 
 polygon {
   fill: #ccc;
-  stroke: #f00;
-  stroke-width: 2px;
+  stroke: #00f;
+  stroke-width: 1px;
 }
 
-.country-map polygon:hover{
-	stroke: #00f;
+text{
+	font-family: Helvetica;
+	font-size: 14px;
 }
 
-polygon.neighbor {
-	fill-opacity: .8;
+.country-state:hover polygon, .neighbor-state:hover polygon {
+	stroke: #f00;
+}
+
+.neighbor-state polygon {
+	fill-opacity: .7;
 	fill: #eee;
 }
 
-circle.zero{
-  fill: blue;
+.country-state text, .neighbor-state text{
+	fill-opacity: 0;
 }
+
+.country-state:hover text, .neighbor-state:hover text{
+	fill-opacity: 1;
+}
+
 </style>
 </head>
 <body>
