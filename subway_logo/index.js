@@ -71,7 +71,7 @@ function fontLoaded(font, defs){
 	  .x(d => d.x)
 	  .y(d => d.y);
 
-	var start = "C";
+	var start = "F";
 	d3.select("circle")
 		.attr("fill",defs[start].color);
 	d3.select("path")
@@ -100,7 +100,7 @@ function fontLoaded(font, defs){
 				.attrTween('fill', function(){
 					return d3.interpolateRgb(d3.select(this).attr("fill"), defs[end].color);
 				})
-	}, 5000)
+	}, 2000)
 }
 
 
